@@ -1,64 +1,59 @@
 package edu.ucb.broadcastyourself
 
+import edu.ucb.broadcastyourself.VideoItemAdapter.VideoViewHolder
 import android.media.MediaPlayer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.VideoView
 import androidx.recyclerview.widget.RecyclerView
-import edu.ucb.broadcastyourself.VideoItemAdapter.VideoViewHolder
+import kotlinx.android.synthetic.main.item_container_video.view.*
 
 class VideoItemAdapter(videos: List<VideoItem>) :RecyclerView.Adapter<VideoViewHolder>(){
 
-    private var videoList: List<VideoItem> = videos
+    var arrVideoModel:List<VideoItem> = videos
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
-        return VideoViewHolder(LayoutInflater.from(parent.context).inflate(
-            R.layout.item_container_video,
-            parent,
-            false
-        ))
-    }
-
-    override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
-        holder.setVideoData(videoList.get(position))
+        return VideoViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_container_video,parent,false))
     }
 
     override fun getItemCount(): Int {
-        return videoList.size
+        return arrVideoModel.size
     }
 
-    inner class VideoViewHolder(itemView: View) :RecyclerView.ViewHolder(itemView) {
-        private var videoView: VideoView = itemView.findViewById(R.id.videoView)
-        private var textVideoTitle: TextView? = itemView.findViewById(R.id.textVideoTitle)
-        private var textVideoDescription: TextView? = itemView.findViewById(R.id.textVideoDescription)
-        private var videoProgressBar: ProgressBar? = itemView.findViewById(R.id.videoProgressBar)
+    override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
+        holder.setVideoData(arrVideoModel[position])
+    }
 
-        fun setVideoData(videoItem: VideoItem) {
-            textVideoTitle?.setText(videoItem.videoTitle)
-            textVideoDescription?.setText(videoItem.videoDescription)
-            videoView.setVideoPath(videoItem.videoURL)
-            videoView.setOnPreparedListener(MediaPlayer.OnPreparedListener {
-                fun onPrepared(mp: MediaPlayer) {
-                    videoProgressBar?.visibility = View.GONE
+    class VideoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
+
+        fun setVideoData(videoModel: VideoItem){
+
+            itemView.tvTitle.text = videoModel.videoTitle
+            itemView.tvDesc.text = videoModel.videoDescription
+            itemView.videoView.setVideoPath(videoModel.videoURL)
+            itemView.videoView.setOnPreparedListener(object :MediaPlayer.OnPreparedListener{
+                override fun onPrepared(mp: MediaPlayer) {
+                    itemView.progressBar.visibility = View.GONE
                     mp.start()
-                    var videoRatio = mp.videoWidth / mp.videoHeight
-                    var screenRatio = videoView.width / videoView.height
-                    var scale = videoRatio / screenRatio
-                    if (scale >= 1f) {
-                        videoView.scaleX = scale.toFloat()
-                    } else {
-                        videoView.scaleY = 1f/scale
+                    val videoRatio = mp.videoWidth.toFloat() / mp.videoHeight.toFloat()
+                    val screenRatio = itemView.videoView.width.toFloat() / itemView.videoView.height.toFloat()
+
+                    val scale = videoRatio / screenRatio
+                    if (scale > 1f){
+                        itemView.videoView.scaleX = scale
+                    }else{
+                        itemView.videoView.scaleY = (1f / scale)
                     }
                 }
+
             })
-            videoView.setOnCompletionListener { MediaPlayer.OnCompletionListener {
-                fun onCompletion(mp: MediaPlayer) {
+
+            itemView.videoView.setOnCompletionListener { object : MediaPlayer.OnCompletionListener{
+                override fun onCompletion(mp: MediaPlayer) {
                     mp.start()
                 }
             } }
         }
+
     }
 }
